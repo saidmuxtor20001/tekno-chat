@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tekno Chat</title>
+    <link rel="shortcut icon" href="./a4e767a4e49482d42319676534ee073e.jpg" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tektur', 'Tekno', 'Segoe UI', 'Courier New', monospace;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Asosiy chat konteyneri - qora, oq chegara */
+        .chat-app {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 700px;
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 8px 8px 0px 0px #1a1a1a;
+        }
+
+        /* Header - qora va kulrang */
+        .chat-header {
+            background: #050505;
+            padding: 18px 24px;
+            border-bottom: 1px solid #222;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chat-header h1 {
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #e0e0e0;
+            font-family: 'Tektur', 'Tekno', monospace;
+            text-transform: uppercase;
+        }
+
+        .status-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .connection-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: #888;
+            font-family: 'Tektur', monospace;
+        }
+
+        .led {
+            width: 8px;
+            height: 8px;
+            border-radius: 0px;
+            background: #2a2a2a;
+            transition: all 0.2s;
+        }
+
+        .led.on {
+            background: #ffffff;
+            box-shadow: 0 0 4px #ffffff;
+        }
+
+        .user-tag {
+            background: #1a1a1a;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: #ccc;
+            letter-spacing: 1px;
+            font-family: 'Tektur', monospace;
+        }
+
+        /* Xabarlar maydoni */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+            background: #0a0a0a;
+        }
+
+        /* Minimal scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #444;
+        }
+
+        /* Xabar kartochkalari - minimal, border radius 0 */
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            animation: fadeMessage 0.2s ease;
+        }
+
+        @keyframes fadeMessage {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            align-self: flex-end;
+        }
+
+        .message.other {
+            align-self: flex-start;
+        }
+
+        .bubble {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            word-wrap: break-word;
+            font-weight: 400;
+            font-family: 'Tektur', 'Tekno', monospace;
+        }
+
+        .own .bubble {
+            background: #1f1f1f;
+            color: #f0f0f0;
+            border: 1px solid #333;
+        }
+
+        .other .bubble {
+            background: #111111;
+            color: #d0d0d0;
+            border: 1px solid #252525;
+        }
+
+        .message-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 0.6rem;
+            margin: 5px 8px 0;
+            opacity: 0.6;
+            font-family: 'Tektur', monospace;
+        }
+
+        .own .message-meta {
+            justify-content: flex-end;
+        }
+
+        .sender-name {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: #aaa;
+        }
+
+        .timestamp {
+            color: #666;
+        }
+
+        /* System xabarlar - minimal */
+        .system-bubble {
+            text-align: center;
+            font-size: 0.65rem;
+            padding: 5px 12px;
+            width: fit-content;
+            margin: 4px auto;
+            color: #555;
+            background: #111;
+            border: 1px solid #222;
+            font-family: 'Tektur', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        /* Typing indicator - qora oq */
+        .typing-status {
+            padding: 6px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+            color: #777;
+            font-family: 'Tektur', monospace;
+        }
+
+        .dot-wave {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .dot-wave span {
+            width: 4px;
+            height: 4px;
+            background: #888;
+            display: inline-block;
+            animation: blink 1.2s infinite;
+        }
+
+        .dot-wave span:nth-child(2) { animation-delay: 0.2s; }
+        .dot-wave span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        /* Input maydoni - minimal */
+        .input-section {
+            background: #050505;
+            padding: 16px 20px;
+            border-top: 1px solid #1c1c1c;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            padding: 12px 16px;
+            color: #e0e0e0;
+            font-size: 0.85rem;
+            font-family: 'Tektur', 'Tekno', monospace;
+            outline: none;
+            transition: all 0.15s;
+        }
+
+        .input-group input:focus {
+            border-color: #555;
+            background: #0c0c0c;
+        }
+
+        .input-group input::placeholder {
+            color: #3a3a3a;
+            font-family: 'Tektur', monospace;
+        }
+
+        .input-group button {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 12px 24px;
+            font-weight: 400;
+            font-size: 0.8rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Tektur', monospace;
+            letter-spacing: 1px;
+        }
+
+        .input-group button:hover {
+            background: #252525;
+            border-color: #555;
+            color: white;
+        }
+
+        /* Toast xabarlar */
+        .toast-notify {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid #333;
+            color: #aaa;
+            padding: 8px 20px;
+            font-size: 0.7rem;
+            z-index: 999;
+            font-family: 'Tektur', monospace;
+            letter-spacing: 0.5px;
+            box-shadow: 4px 4px 0px 0px #000;
+            animation: toastUp 0.2s ease;
+        }
+
+        @keyframes toastUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Modal - minimal, qora oq, border radius minimal */
+        .glass-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-card-modern {
+            background: #0c0c0c;
+            padding: 32px 28px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            box-shadow: 8px 8px 0px 0px #000000;
+            animation: modalFade 0.2s ease;
+        }
+
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-card-modern h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #ddd;
+            font-family: 'Tektur', monospace;
+            letter-spacing: 2px;
+        }
+
+        .modal-card-modern p {
+            font-size: 0.7rem;
+            color: #666;
+            margin-bottom: 16px;
+            font-family: 'Tektur', monospace;
+        }
+
+        .modal-card-modern input {
+            width: 100%;
+            background: #030303;
+            border: 1px solid #2a2a2a;
+            padding: 12px;
+            margin: 12px 0;
+            color: white;
+            font-size: 0.85rem;
+            text-align: center;
+            font-family: 'Tektur', monospace;
+            outline: none;
+        }
+
+        .modal-card-modern input:focus {
+            border-color: #555;
+        }
+
+        .modal-card-modern button {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            width: 100%;
+            padding: 12px;
+            font-size: 0.8rem;
+            color: #ccc;
+            cursor: pointer;
+            font-family: 'Tektur', monospace;
+            letter-spacing: 1px;
+            transition: 0.1s;
+        }
+
+        .modal-card-modern button:hover {
+            background: #252525;
+            border-color: #555;
+            color: white;
+        }
+
+        /* Hech qanday border radius - faqat minimal 0 */
+        .bubble, .system-bubble, .user-tag, .input-group input, .input-group button, .modal-card-modern, .toast-notify {
+            border-radius: 0px;
+        }
+
+        /* Agar juda ozgina border radius kerak bo'lsa - faqat 2px */
+        .chat-app {
+            border-radius: 2px;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+<div class="chat-app" id="chatApp" style="display: none;">
+    <div class="chat-header">
+        <div class="header-top">
+            <h1>TEKNO CHAT</h1>
+            <div class="status-group">
+                <div class="connection-badge">
+                    <div class="led" id="ledStatus"></div>
+                    <span id="connText">offline</span>
+                </div>
+                <div class="user-tag" id="globalUserName">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-messages" id="messagesContainer">
+        <div class="system-bubble">terminal chat / active</div>
+    </div>
+
+    <div id="typingArea" class="typing-status" style="display: none;">
+        <span>⟩</span> <span id="typingUserName">user</span> <span>typing</span>
+        <div class="dot-wave"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="input-section">
+        <div class="input-group">
+            <input type="text" id="messageField" placeholder="> write message" autocomplete="off">
+            <button id="sendMsgBtn">SEND</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const socket = io({
+        reconnection: true,
+        reconnectionAttempts: 8,
+        reconnectionDelay: 1200
+    });
+
+    const chatApp = document.getElementById('chatApp');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageField = document.getElementById('messageField');
+    const sendBtn = document.getElementById('sendMsgBtn');
+    const ledStatus = document.getElementById('ledStatus');
+    const connText = document.getElementById('connText');
+    const globalUserNameSpan = document.getElementById('globalUserName');
+    const typingArea = document.getElementById('typingArea');
+    const typingUserNameSpan = document.getElementById('typingUserName');
+
+    let currentUser = null;
+    let typingTimer = null;
+    let isCurrentlyTyping = false;
+    let hideTypingTimeout = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    function scrollToLatest() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function addSystemMessage(text) {
+        const sysDiv = document.createElement('div');
+        sysDiv.className = 'system-bubble';
+        sysDiv.innerText = text;
+        messagesContainer.appendChild(sysDiv);
+        scrollToLatest();
+    }
+
+    function addChatMessage(username, message, isOwn = false, timestamp = null) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+        const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        msgDiv.innerHTML = `
+            <div class="bubble">${escapeHtml(message)}</div>
+            <div class="message-meta">
+                <span class="sender-name">${escapeHtml(username)}</span>
+                <span class="timestamp">${timeStr}</span>
+            </div>
+        `;
+        messagesContainer.appendChild(msgDiv);
+        scrollToLatest();
+    }
+
+    function showFloatingMessage(msg, isError = true) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notify';
+        toast.innerText = msg;
+        if (!isError) toast.style.color = "#999";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    function emitTyping() {
+        if (!currentUser) return;
+        if (!isCurrentlyTyping) {
+            isCurrentlyTyping = true;
+            socket.emit("typing", currentUser);
+        }
+        if (typingTimer) clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            if (isCurrentlyTyping) {
+                isCurrentlyTyping = false;
+                socket.emit("stop_typing", currentUser);
+            }
+        }, 1400);
+    }
+
+    messageField.addEventListener('input', () => {
+        if (messageField.value.trim().length > 0) emitTyping();
+        else {
+            if (isCurrentlyTyping) {
+                isCurrentlyTyping = false;
+                socket.emit("stop_typing", currentUser);
+                if (typingTimer) clearTimeout(typingTimer);
+            }
+        }
+    });
+
+    function sendMessageLogic() {
+        const text = messageField.value.trim();
+        if (!text) return;
+        if (!currentUser) {
+            showFloatingMessage("set username first");
+            return;
+        }
+        socket.emit("message_from_client", text, (resp) => {
+            if (resp && resp.error) showFloatingMessage(resp.error);
+        });
+        messageField.value = "";
+        if (isCurrentlyTyping) {
+            isCurrentlyTyping = false;
+            socket.emit("stop_typing", currentUser);
+            if (typingTimer) clearTimeout(typingTimer);
+        }
+        messageField.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessageLogic);
+    messageField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessageLogic();
+        }
+    });
+
+    // Socket events
+    socket.on("connect", () => {
+        ledStatus.classList.add('on');
+        connText.innerText = "online";
+        if (currentUser) {
+            socket.emit("user_join", currentUser);
+        } else {
+            addSystemMessage("connection established");
+        }
+    });
+
+    socket.on("disconnect", () => {
+        ledStatus.classList.remove('on');
+        connText.innerText = "offline";
+        addSystemMessage("connection lost");
+    });
+
+    socket.on("connect_error", () => showFloatingMessage("server error"));
+
+    socket.on("system_message", (msg) => addSystemMessage(msg));
+
+    socket.on("message_from_server", (data) => {
+        if (!data || !data.user || !data.text) return;
+        const isOwn = (data.user === currentUser);
+        addChatMessage(data.user, data.text, isOwn, data.time);
+    });
+
+    socket.on("chat_history", (history) => {
+        if (history && history.length) {
+            messagesContainer.innerHTML = '<div class="system-bubble">history</div>';
+            history.forEach(item => {
+                if (item.type === "message") {
+                    const ownFlag = (item.user === currentUser);
+                    addChatMessage(item.user, item.text, ownFlag, item.time);
+                } else if (item.type === "system") {
+                    addSystemMessage(item.text);
+                }
+            });
+            scrollToLatest();
+        }
+    });
+
+    socket.on("user_typing", (username) => {
+        if (username === currentUser) return;
+        typingUserNameSpan.innerText = username;
+        typingArea.style.display = "flex";
+        if (hideTypingTimeout) clearTimeout(hideTypingTimeout);
+        hideTypingTimeout = setTimeout(() => {
+            typingArea.style.display = "none";
+        }, 2100);
+    });
+
+    socket.on("user_stop_typing", (username) => {
+        if (username === currentUser) return;
+        typingArea.style.display = "none";
+        if (hideTypingTimeout) clearTimeout(hideTypingTimeout);
+    });
+
+    socket.on("error_message", (errMsg) => showFloatingMessage(errMsg));
+
+    // Modal login
+    function showTeknoModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'glass-modal';
+        modalDiv.innerHTML = `
+            <div class="modal-card-modern">
+                <h2>TEKNO</h2>
+                <p>enter username</p>
+                <input type="text" id="modalUsername" maxlength="20" placeholder="nickname" autocomplete="off">
+                <button id="modalJoinBtn">JOIN</button>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        const inputName = document.getElementById('modalUsername');
+        const joinBtn = document.getElementById('modalJoinBtn');
+
+        const joinChat = () => {
+            let name = inputName.value.trim();
+            if (name === "") name = "tekno_" + Math.floor(Math.random() * 999);
+            if (name.length > 20) name = name.slice(0,20);
+            currentUser = name;
+            globalUserNameSpan.innerText = currentUser;
+            socket.emit("user_join", currentUser);
+            modalDiv.remove();
+            chatApp.style.display = "flex";
+            messageField.focus();
+        };
+        joinBtn.addEventListener('click', joinChat);
+        inputName.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinChat();
+        });
+        inputName.focus();
+    }
+
+    showTeknoModal();
+</script>
+</body>
+</html>
